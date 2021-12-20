@@ -179,7 +179,7 @@ def bagging(aggregative, grid_size_x=40, grid_size_y=40):
     return grid #grid_dir_1, grid_dir_2
 
 """ MAIN FUNCTION STARTS HERE"""
-def main(output = 'TERMINAL', do_bagging = True):
+def main(output = 'FILE', do_bagging = True):
     # Select the direction of the road
     select_direction = 2
 
@@ -190,7 +190,7 @@ def main(output = 'TERMINAL', do_bagging = True):
         sys.stdout = f
 
     # Loading data
-    df = traffic_data_load('146', '01', 2019, 52, 57)
+    df = traffic_data_load('146', '01', 2019, 42, 44)
     print(df)
 
     # Aggregating data
@@ -208,7 +208,7 @@ def main(output = 'TERMINAL', do_bagging = True):
 
     #plt.show()
     
-    
+    """
     plt.scatter(grid[grid.direction==1].centroid_density, grid[grid.direction==1].centroid_flow,
         c='r', marker = 'o', s=grid[grid.direction==1].weight*10000, label='Direction 1')
     plt.scatter(grid[grid.direction==2].centroid_density, grid[grid.direction==2].centroid_flow,
@@ -226,8 +226,13 @@ def main(output = 'TERMINAL', do_bagging = True):
         model = wCQER.wCQR(y=y, x=x, w=w, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
         model.optimize(OPT_LOCAL)
         print(model.get_residual())
+        print(model.get_alpha())
+        print(model.get_beta())
+        print(model.get_frontier())
+        print(len(model.x))
+        print(len(model.get_frontier()))
         plot2d(model, x_select=0, label_name="Figure 1", fig_name="Figure 1")
-    """
+    
     # Close the log-file in case of 'FILE' output 
     if output == 'FILE':
         f.close()
