@@ -16,17 +16,16 @@ from pystoned.plot import plot2d
 import pyarrow
 import sys
 
-default_column_names = ['id', 'year', 'day', 'hour',
+DEF_COL_NAMES = ['id', 'year', 'day', 'hour',
         'minute', 'second', 'hund_second', 'length', 'lane',
         'direction', 'vehicle', 'speed', 'faulty', 'total_time',
         'time_interval', 'queue_start']
-default_filepath = 'parquetdata'
-default_aggregation_time_period = 5
-
+DEF_FILEPATH = 'parquetdata'
+DEF_AGG_TIME_PER = 5
 
 def download_lam_day_report (tms_id, region, year, day, time_from=6, time_to=20):
     start_time = time.perf_counter() 
-    column_names = default_column_names
+    column_names = DEF_COL_NAMES
     df = pd.DataFrame()
     url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/YYYY/REGION_ID/lamraw_TMS_YY_DD.csv'
 
@@ -64,8 +63,8 @@ def traffic_data_load(tms_id, region, year, day_from, day_to, time_from=6, time_
     filename = 'data' + '_' + tms_id + '_' + str(year)[2:4] \
             + '_' + str(day_from) + '_' + str(day_to) + '_' + str(time_from) \
             + 'h_' + str(time_to) + 'h.gzip'
-    filepath = default_filepath
-    column_names = default_column_names
+    filepath = DEF_FILEPATH
+    column_names = DEF_COL_NAMES
     df = pd.DataFrame()
 
     # Alternative name selection
@@ -118,7 +117,7 @@ def traffic_data_load(tms_id, region, year, day_from, day_to, time_from=6, time_
 """ PROCESSING OF THE TRAFFIC DATA FRAME: CALCULATION OF SPACE-MEAN SPEED AND SPACE-MEAN FLOW. 
     BASED ON THAT THE DENSITY IS CALCULATED """
 
-def flow_speed_calculation (df, aggregation_time_period = default_aggregation_time_period):
+def flow_speed_calculation (df, aggregation_time_period = DEF_AGG_TIME_PER):
     start_time = time.perf_counter()
     time_agg = pd.DataFrame()
     space_agg = pd.DataFrame()
@@ -191,7 +190,7 @@ def main(output = 'TERMINAL', do_bagging = True):
         sys.stdout = f
 
     # Loading data
-    df = traffic_data_load('146', '01', 2019, 42, 57)
+    df = traffic_data_load('146', '01', 2019, 52, 57)
     print(df)
 
     # Aggregating data
