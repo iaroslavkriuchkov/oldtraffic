@@ -225,12 +225,52 @@ def main(output = 'FILE', do_bagging = True):
     else:
         model = wCQER.wCQR(y=y, x=x, w=w, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
         model.optimize(OPT_LOCAL)
+        print("residual")
         print(model.get_residual())
+        print(type(model.get_residual()))
+        print("alpha")
         print(model.get_alpha())
+        print(model.get_alpha().shape)
+        print(type(model.get_alpha()))
+        print("beta")
         print(model.get_beta())
+        print(type(model.get_beta()))
+        print(model.get_beta().shape)
+        print("flatten beta")
+        flatten = model.get_beta().flatten()
+        print(flatten)
+        print(type(flatten))
+        print(flatten.shape)
+        print("frontier")
         print(model.get_frontier())
-        print(len(model.x))
+        print(type(model.get_frontier()))
         print(len(model.get_frontier()))
+        print("model.x")
+        print(model.x)
+        print(len(model.x))
+        print
+
+        traffic_array = np.column_stack((model.x, model.y))
+        #print(type(np.stack((traffic_array, flatten))))
+        #traffic_array = np.concatenate((np.array(model.x).flatten(), flatten, model.get_alpha(), model.get_residual()), axis=0)
+        print(traffic_array)
+
+        traffic_array = np.column_stack((traffic_array, flatten))
+        print(traffic_array)
+
+
+        traffic_array = np.column_stack((traffic_array, model.get_alpha()))
+        print(traffic_array)
+
+        traffic_array = np.column_stack((traffic_array, model.get_residual()))
+        print(traffic_array)
+
+        traffic_array = np.column_stack((traffic_array, traffic_array[:,0] * traffic_array[:,2] + traffic_array[:,3]))
+        print(traffic_array)
+
+        traffic_array = np.column_stack((traffic_array, traffic_array[:,5] - traffic_array[:,1]))
+        print(traffic_array[:, [4, 6]])
+
         plot2d(model, x_select=0, label_name="Figure 1", fig_name="Figure 1")
     
     # Close the log-file in case of 'FILE' output 
