@@ -58,6 +58,61 @@ def plot2d(model, x_select=0, label_name="estimated function", fig_name=None, me
         plt.savefig(fig_name)
 
 
+def plot2d_test(model, test_array, x_select=0, label_name="estimated function", fig_name=None, method=RED_MOM):
+    """Plot 2d estimated function/frontier
+
+    Args:
+        model: The input model for plotting.
+        test_array: 0 is x, 1 is y
+        x_select (Integer): The selected x for plotting.
+        label_name (String): the estimator name.
+        fig_name (String, optional): The name of figure to save. Defaults to None.
+    """
+    x = np.array(model.x).T[x_select]
+    y = np.array(model.y).T
+    if y.ndim != 1:
+        print("Plot with mutiple y is unavailable now.")
+        return False
+    if model.__class__.__name__ != "StoNED":
+        yhat = np.array(model.get_frontier()).T
+    else:
+        yhat = np.array(model.get_frontier(method)).T
+
+    data = (np.stack([x, y, yhat], axis=0)).T
+
+    # sort
+    data = data[np.argsort(data[:, 0])].T
+
+    test_array = test_array[np.argsort(test_array[:, 0])].T
+
+    x, y, f = data[0], data[1], data[2]
+
+    # create figure and axes objects
+    fig, ax = plt.subplots()
+    dp = ax.scatter(test_array[0], test_array[1], color="k", marker='x')
+    fl = ax.plot(x, f, color="r", label=label_name)
+
+    # add legend
+    legend = plt.legend([dp, fl[0]],
+                        ['Data points', label_name],
+                        loc='upper left',
+                        ncol=1,
+                        fontsize=10,
+                        frameon=False)
+
+    # add x, y label
+    ax.set_xlabel("Input $x$")
+    ax.set_ylabel("Output $y$")
+
+    # Remove top and right axes
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    if fig_name == None:
+        plt.show()
+    else:
+        plt.savefig(fig_name)
+
+
 def plot3d(model, x_select_1=0, x_select_2=1, fig_name=None, line_transparent=False, pane_transparent=False):
     """Plot 3d estimated function/frontier
 
