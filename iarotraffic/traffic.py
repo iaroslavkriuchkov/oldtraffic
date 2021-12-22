@@ -1,5 +1,6 @@
 # Import dependencies
 
+from typing import Sequence
 from numpy.core.numeric import _moveaxis_dispatcher
 import pandas as pd
 import numpy as np
@@ -201,11 +202,31 @@ def bagging(aggregative, grid_size_x=40, grid_size_y=40):
 
     return grid  # grid_dir_1, grid_dir_2
 
+def representor(alpha: Sequence[float], beta: Sequence[float], x: float) -> float:
+
+    """
+    Calculation of representation function (Kuosmanen, 2008 / Formula 4.1)
+    g_hat_min = min{alpha_i_hat + beta_i_hat * x}
+
+    alpha: np.array of alphas
+    beta: np.array of betas
+    x: float x
+
+    returns the minimum value g_hat for the given x
+    """
+    g_hat = np.empty_like(alpha)
+    x_arr = np.full_like(alpha, x, dtype=float)
+    g_hat = alpha + beta * x_arr
+    g_hat_min = np.amin(g_hat)
+
+    return g_hat_min
+
 def out_of_sample_mse(model, test_array):
     """
     train_array order: 0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 – residual, 5 – y_train_calc,
         6 - y_train_calc-y_act, 7 – residual squared
-    test_array order: 0 – x_test, 1 – y_test, 2 – beta, 3 – alpha, 4 – y_test_calc, 5 – residual, 6 – residual squared
+    test_array order: 0 – x_test, 1 – y_test, 2 – beta, 3 – alpha, 4 – y_test_calc, 5 – residual,
+        6 – residual squared, 7 - representor, 8 representor -estimate
     """
     train_array = np.column_stack((model.x, model.y))
     train_array.view('f8,f8').sort(order=['f0'], axis=0)
@@ -222,12 +243,10 @@ def out_of_sample_mse(model, test_array):
         (train_array, train_array[:, 1] - train_array[:, 5]))
     train_array = np.column_stack(
         (train_array, np.square(train_array[:, 4])))
-    print(train_array)
 
     test_array.view('f8,f8').sort(order=['f0'], axis=0)
     test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
     test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
-    print(test_array)
     i = 0
     j = 0
 
@@ -243,9 +262,6 @@ def out_of_sample_mse(model, test_array):
             test_item[2] = train_array[j][2]
             test_item[3] = train_array[j][3]
 
-    with np.printoptions(threshold=np.inf):
-        print(test_array)
-
     test_array = np.column_stack(
         (test_array, test_array[:, 0] * test_array[:, 2] + test_array[:, 3]))
     test_array = np.column_stack(
@@ -253,9 +269,24 @@ def out_of_sample_mse(model, test_array):
     test_array = np.column_stack(
         (test_array, np.square(test_array[:, 5])))
 
-    train_mse = math.sqrt(np.sum(train_array[:, 7])) / len(train_array[:, 7])
+    test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
+
+    for i in range(len(test_array[:, 0])):
+        test_array[i, 7] = representor(train_array[:, 3], train_array[:, 2], test_array[i, 0])
+
+    test_array = np.column_stack(
+        (test_array, test_array[:, 7] - test_array[:, 4]))
+
+    # test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
+
+    # test_array[:, 8] = test_array[:, 7] - test_array[:, 4]
+
+    with np.printoptions(threshold=np.inf):
+        print(test_array)
+
+    train_mse = np.sum(train_array[:, 7]) / len(train_array[:, 7])
     print(train_mse)
-    test_mse = math.sqrt(np.sum(test_array[:, 6])) / len(test_array[:, 6])
+    test_mse = np.sum(test_array[:, 6]) / len(test_array[:, 6])
     print(test_mse)
 
     return test_array
