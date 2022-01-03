@@ -15,7 +15,7 @@ import pathlib
 from pystoned import CQER, wCQER, CQERG
 from pystoned.constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from pystoned import dataset as dataset
-from pystoned.plot import plot2d
+from pystoned.plot import plot2d, plot2d_test
 import pyarrow
 import sys
 import math
@@ -24,11 +24,54 @@ DEF_COL_NAMES = ['id', 'year', 'day', 'hour',
                  'minute', 'second', 'hund_second', 'length', 'lane',
                  'direction', 'vehicle', 'speed', 'faulty', 'total_time',
                  'time_interval', 'queue_start']
-DEF_FILEPATH = 'parquetdata'
+DEF_FILEPATH = '../parquetdata'
 DEF_AGG_TIME_PER = 5
 
 
-def download_lam_day_report(tms_id, region, year, day, time_from=6, time_to=20):
+def download_lam_day_report(tms_id: str, region: str, year: int, day: int,
+                            time_from: int = 6, time_to: int = 20, if_faulty: bool = True) -> pd.DataFrame:
+    """Download the lam-report for the specified day. Downloaded data is cleaned.
+
+    Parameters
+    ----------
+    tms_id : str
+        The id number of selected traffic measurement station (TMS). \
+        Meta-data about TMS is available: https://www.digitraffic.fi/en/road-traffic/#current-data-from-tms-stations .\
+        String format is used, as `tms_id` might have a leading zero.
+    region : str
+        The code of the region, where the selected traffic measurement station is located.
+        For values check "Accessing the data" article by the link: \
+        https://vayla.fi/en/transport-network/data/open-data/road-network/tms-data#accessing-the-data.\
+        String format is used, as `region` might have a leading zero.
+    year : int
+        The year data was collected in the 4-digit format.
+    day : int
+        The day of the year the data was collected. \
+        The day is provide as an integer in range(1, 366), with 1 - January 1st, \
+        365 (366 in leap year) - December 31st. \
+        To caclulate the day of the year you can use `iarotraffic.date_to_day()` function.
+    time_from : int, optional
+        Data is cleaned, and the `time_from` shows, from which hour of the day the data is kept in 24h format. \
+        (The default is 6, which reffrs to 6am)
+    time_to : int, optional
+        Data is cleaned, and the `time_to` shows, till which hour of the day the data is kept in 24h format. \
+        (The default is 20, which refers to 8pm)
+    if_faulty : Bool, optional
+        The default is `True`, meaning that faulty data is deleted. \
+        Faulty data is detected based on information from the dataset.
+
+    Returns
+    -------
+    pd.DataFrame
+        Pandas DataFrame containing cleaned lam-report for the selected TMS station \
+        for the selected day of the selected year.
+
+    See Also
+    --------
+    iarotraffic.date_to_day :
+        The function for conversion the date to the day of the year.
+
+    """
     start_time = time.perf_counter()
     column_names = DEF_COL_NAMES
     df = pd.DataFrame()
@@ -48,7 +91,8 @@ def download_lam_day_report(tms_id, region, year, day, time_from=6, time_to=20):
         df['date'] = datetime.date(year, 1, 1) + datetime.timedelta(day - 1)
 
         # Deleting faulty data point.
-        df = df[df.faulty != 1]
+        if if_faulty is True:
+            df = df[df.faulty != 1]
 
         # Selecting data only from the specified timeframe
         df = df[df.total_time >= time_from*60*60*100]
@@ -64,13 +108,22 @@ def download_lam_day_report(tms_id, region, year, day, time_from=6, time_to=20):
 
     return df
 
+def date_to_day(date_to_change: datetime.date) -> int:
+    first_day = datetime.date(date_to_change.year, 1, 1)
+    day = abs(date_to_change - datetime.date(date_to_change.year, 1, 1)).days+1
+    return day
 
-"""LOADING TRAFFIC DATA FROM LOCAL GZIP-FILE. IF UNSUCCESSFUL, LOADS DATA FROM SERVER AND SAVES LOCALLY AS GZIP-FILE"""
+def day_to_date(year: int, day: int) -> datetime.date:
+    date = datetime.date(year, 1, 1) + datetime.timedelta(days=day-1)
+    return date
 
+
+"""LOADING TRAFFIC DATA FROM LOCAL GZIP-FILE.
+IF UNSUCCESSFUL, LOADING DATA FROM THE SERVER AND SAVING IT LOCALLY AS GZIP-FILE"""
 
 def traffic_data_load(
-        tms_id, region, year, day_from, day_to, time_from=6, time_to=20,
-        input_path=None, input_name=None, file_type='gzip'):
+        tms_id: str, region: str, year: int, day_from: int, day_to: int, time_from=6, time_to=20,
+        input_path=None, input_name=None, file_type='gzip') -> pd.DataFrame:
     start_time = time.perf_counter()
     filename = 'data' + '_' + tms_id + '_' + str(year)[2:4] \
         + '_' + str(day_from) + '_' + str(day_to) + '_' + str(time_from) \
@@ -136,7 +189,7 @@ def traffic_data_load(
 BASED ON THAT THE DENSITY IS CALCULATED """
 
 
-def flow_speed_calculation(df, aggregation_time_period=DEF_AGG_TIME_PER):
+def flow_speed_calculation(df: pd.DataFrame, aggregation_time_period=DEF_AGG_TIME_PER) -> pd.DataFrame:
     start_time = time.perf_counter()
     time_agg = pd.DataFrame()
     space_agg = pd.DataFrame()
@@ -169,10 +222,8 @@ def flow_speed_calculation(df, aggregation_time_period=DEF_AGG_TIME_PER):
 
 
 """ BAGGING OF PROCESSED DATA """
-
-
-def bagging(aggregative, grid_size_x=40, grid_size_y=40):
-    grid = pd.DataFrame()
+def bagging(aggregative: pd.DataFrame, grid_size_x=40, grid_size_y=40) -> pd.DataFrame:
+    bagged_data = pd.DataFrame()
 
     # Getting the max density and flow values to calculcate the size of the bag
     maxDensity = aggregative.density.max()
@@ -188,22 +239,18 @@ def bagging(aggregative, grid_size_x=40, grid_size_y=40):
     aggregative = aggregative.astype({'grid_density': int, 'grid_flow': int})
 
     # Calculating the centroid adn the weight of each bag
-    grid = aggregative.groupby(['id', 'direction', 'grid_density', 'grid_flow'],
-                               as_index=False).agg(bag_size=('id', 'count'),
-                                                   sum_flow=('flow', 'sum'),
-                                                   sum_density=('density', 'sum'))
-    grid['centroid_flow'] = grid.sum_flow.div(grid.bag_size)
-    grid['centroid_density'] = grid.sum_density.div(grid.bag_size)
-    grid['weight'] = grid.bag_size.div(len(aggregative))
+    bagged_data = aggregative.groupby(
+        ['id', 'direction', 'grid_density', 'grid_flow'],
+        as_index=False).agg(bag_size=('id', 'count'),
+        sum_flow=('flow', 'sum'),
+        sum_density=('density', 'sum'))
+    bagged_data['centroid_flow'] = bagged_data.sum_flow.div(bagged_data.bag_size)
+    bagged_data['centroid_density'] = bagged_data.sum_density.div(bagged_data.bag_size)
+    bagged_data['weight'] = bagged_data.bag_size.div(len(aggregative))
 
-    # Separating the directions
-    # grid_dir_1 = grid[grid.direction == 1]
-    # grid_dir_2 = grid[grid.direction == 2]
-
-    return grid  # grid_dir_1, grid_dir_2
+    return bagged_data
 
 def representor(alpha: Sequence[float], beta: Sequence[float], x: float) -> float:
-
     """
     Calculation of representation function (Kuosmanen, 2008 / Formula 4.1)
     g_hat_min = min{alpha_i_hat + beta_i_hat * x}
@@ -221,72 +268,282 @@ def representor(alpha: Sequence[float], beta: Sequence[float], x: float) -> floa
 
     return g_hat_min
 
-def out_of_sample_mse(model, test_array):
+def out_of_sample_mse(model, test_array: np.ndarray) -> list:
     """
-    train_array order: 0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 – residual, 5 – y_train_calc,
-        6 - y_train_calc-y_act, 7 – residual squared
-    test_array order: 0 – x_test, 1 – y_test, 2 – beta, 3 – alpha, 4 – y_test_calc, 5 – residual,
-        6 – residual squared, 7 - representor, 8 representor -estimate
+    bm_array order: 0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 - residual, 5 - y_train_calc,
+        6 - y_train_calc-y_act, 7 - residual squared, 8 - abs(y_train_calc-y_act)
+    test_array order: 0 - x_test, 1 - y_test, 2 - representor, 3 - residual, 4 - residual squared, 5 - abs(residual)
     """
-    train_array = np.column_stack((model.x, model.y))
-    train_array.view('f8,f8').sort(order=['f0'], axis=0)
+    bm_array = np.column_stack((model.x, model.y))
+    bm_array.view('f8,f8').sort(order=['f0'], axis=0)
     flatten = model.get_beta().flatten()
-    train_array = np.column_stack(
-        (train_array, flatten))
-    train_array = np.column_stack(
-        (train_array, model.get_alpha()))
-    train_array = np.column_stack(
-        (train_array, model.get_residual()))
-    train_array = np.column_stack(
-        (train_array, train_array[:, 0] * train_array[:, 2] + train_array[:, 3]))
-    train_array = np.column_stack(
-        (train_array, train_array[:, 1] - train_array[:, 5]))
-    train_array = np.column_stack(
-        (train_array, np.square(train_array[:, 4])))
+    bm_array = np.column_stack(
+        (bm_array, flatten))
+    bm_array = np.column_stack(
+        (bm_array, model.get_alpha()))
+    bm_array = np.column_stack(
+        (bm_array, model.get_residual()))
+    bm_array = np.column_stack(
+        (bm_array, bm_array[:, 0] * bm_array[:, 2] + bm_array[:, 3]))
+    bm_array = np.column_stack(
+        (bm_array, bm_array[:, 1] - bm_array[:, 5]))
+    bm_array = np.column_stack(
+        (bm_array, np.square(bm_array[:, 4])))
+    bm_array = np.column_stack(
+        (bm_array, abs(bm_array[:, 1] - bm_array[:, 5])))
 
+    # Sorting of test array
     test_array.view('f8,f8').sort(order=['f0'], axis=0)
-    test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
-    test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
-    i = 0
-    j = 0
 
-    for test_item in test_array:
-        if test_item[0] <= train_array[j][0]:
-            test_item[2] = train_array[j][2]
-            test_item[3] = train_array[j][3]
-        elif j != len(train_array)-1:
-            j += 1
-            test_item[2] = train_array[j][2]
-            test_item[3] = train_array[j][3]
-        else:
-            test_item[2] = train_array[j][2]
-            test_item[3] = train_array[j][3]
+    # Calculation of y_test_hat using representor function
+    test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
+
+    for i in range(len(test_array[:, 0])):
+        test_array[i, 2] = representor(bm_array[:, 3], bm_array[:, 2], test_array[i, 0])
 
     test_array = np.column_stack(
-        (test_array, test_array[:, 0] * test_array[:, 2] + test_array[:, 3]))
+        (test_array, test_array[:, 1] - test_array[:, 2]))
+
     test_array = np.column_stack(
-        (test_array, test_array[:, 1] - test_array[:, 4]))
+        (test_array, np.square(test_array[:, 3])))
+
     test_array = np.column_stack(
-        (test_array, np.square(test_array[:, 5])))
+        (test_array, abs(test_array[:, 1] - test_array[:, 2])))
+
+    # with np.printoptions(threshold=np.inf):
+    #    print(test_array)
+
+    train_mse = np.sum(bm_array[:, 7]) / len(bm_array[:, 7])
+    print(f"Train set MSE equals {train_mse}")
+
+    train_rmse = math.sqrt(np.sum(bm_array[:, 7]) / len(bm_array[:, 7]))
+    print(f"Train set RMSE equals {train_rmse}")
+
+    train_mae = np.sum(bm_array[:, 8]) / len(bm_array[:, 7])
+    print(f"Train set MAE equals {train_mae}")
+    print('\n')
+
+    test_mse = np.sum(test_array[:, 4]) / len(test_array[:, 4])
+    print(f"Test MSE equals {test_mse}")
+
+    test_rmse = math.sqrt(np.sum(test_array[:, 4]) / len(test_array[:, 4]))
+    print(f"Test RMSE equals {test_rmse}")
+
+    test_mae = np.sum(test_array[:, 5]) / len(test_array[:, 5])
+    print(f"Test MAE equals {test_mae}")
+
+    error_list = [[train_mse, train_rmse, train_mae], [test_mse, test_rmse, test_mae]]
+
+    print("Calculation of out of sample MSE completed")
+
+    return error_list
+
+def in_sample_mse(model) -> list:
+    """
+    bm_array order: 0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 - residual, 5 - y_train_calc,
+        6 - y_train_calc-y_act, 7 - residual squared, 8 - abs(y_train_calc-y_act)
+    """
+    bm_array = np.column_stack((model.x, model.y))
+    bm_array.view('f8,f8').sort(order=['f0'], axis=0)
+    flatten = model.get_beta().flatten()
+    bm_array = np.column_stack(
+        (bm_array, flatten))
+    bm_array = np.column_stack(
+        (bm_array, model.get_alpha()))
+    bm_array = np.column_stack(
+        (bm_array, model.get_residual()))
+    bm_array = np.column_stack(
+        (bm_array, bm_array[:, 0] * bm_array[:, 2] + bm_array[:, 3]))
+    bm_array = np.column_stack(
+        (bm_array, bm_array[:, 1] - bm_array[:, 5]))
+    bm_array = np.column_stack(
+        (bm_array, np.square(bm_array[:, 4])))
+    bm_array = np.column_stack(
+        (bm_array, abs(bm_array[:, 1] - bm_array[:, 5])))
+
+    train_mse = np.sum(bm_array[:, 7]) / len(bm_array[:, 7])
+    print(f"Train set MSE equals {train_mse}")
+
+    train_rmse = math.sqrt(np.sum(bm_array[:, 7]) / len(bm_array[:, 7]))
+    print(f"Train set RMSE equals {train_rmse}")
+
+    train_mae = np.sum(bm_array[:, 8]) / len(bm_array[:, 7])
+    print(f"Train set MAE equals {train_mae}")
+    print('\n')
+
+    error_list = [train_mse, train_rmse, train_mae]
+
+    print("Calculation of out of sample MSE completed")
+
+    return error_list
+
+def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, select_direction: int = 2):
+    start_time = time.perf_counter()
+    x_bag = bagged_data[bagged_data.direction == select_direction].centroid_density
+    y_bag = bagged_data[bagged_data.direction == select_direction].centroid_flow
+    w_bag = bagged_data[bagged_data.direction == select_direction].weight
+
+    x_orig = np.array(original_data[original_data.direction == select_direction].density).reshape(
+        len(original_data[original_data.direction == select_direction]), 1)
+    y_orig = np.array(original_data[original_data.direction == select_direction].flow).reshape(
+        len(original_data[original_data.direction == select_direction]), 1)
+
+    test_array = np.column_stack((x_orig, y_orig))
+
+    plt.scatter(
+        bagged_data[bagged_data.direction == select_direction].centroid_density,
+        bagged_data[bagged_data.direction == select_direction].centroid_flow,
+        c='b',
+        marker='X',
+        s=bagged_data[bagged_data.direction == select_direction].weight*10000,
+        label="Bagged data scatter")
+    plt.savefig(fname="Bagged data scatter")
+
+    plt.scatter(
+        original_data[original_data.direction == select_direction].density,
+        original_data[original_data.direction == select_direction].flow,
+        c='r',
+        marker='o',
+        label="Original data scatter")
+    plt.savefig(fname="Original data scatter")
+
+    bagged_model = wCQER.wCQR(y=y_bag, x=x_bag, w=w_bag, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+    bagged_model.optimize(OPT_LOCAL)
+
+    original_model = CQERG.CQRG(y_orig, x_orig, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+    original_model.optimize(OPT_LOCAL)
+
+    plot2d(
+        bagged_model, x_select=0,
+        label_name="Bagged model on bagged data", fig_name="Bagged model on bagged data")
+    plot2d_test(
+        bagged_model, test_array, x_select=0,
+        label_name="Bagged model on original data", fig_name="Bagged model on original data")
+    plot2d(
+        original_model, x_select=0,
+        label_name="Original model on original data", fig_name="Original model on original data")
+
+    """
+    bm_array order:
+    0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 - residual, 5 - residual squared,
+    6 - abs(residual)
+    """
+
+    bm_array = np.column_stack((bagged_model.x, bagged_model.y))
+    bm_array.view('f8,f8').sort(order=['f0'], axis=0)
+    flatten = bagged_model.get_beta().flatten()
+    bm_array = np.column_stack(
+        (bm_array, flatten))
+    bm_array = np.column_stack(
+        (bm_array, bagged_model.get_alpha()))
+    bm_array = np.column_stack(
+        (bm_array, bagged_model.get_residual()))
+    bm_array = np.column_stack(
+        (bm_array, np.square(bm_array[:, 4])))
+    bm_array = np.column_stack(
+        (bm_array, abs(bm_array[:, 4])))
+
+    """
+    orig_array order:
+    0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 - residual, 5 - residual squared,
+    6 - abs(residual)
+    """
+
+    orig_array = np.column_stack((original_model.x, original_model.y))
+    orig_array.view('f8,f8').sort(order=['f0'], axis=0)
+    flatten_orig = original_model.get_beta().flatten()
+    orig_array = np.column_stack(
+        (orig_array, flatten_orig))
+    orig_array = np.column_stack(
+        (orig_array, original_model.get_alpha()))
+    orig_array = np.column_stack(
+        (orig_array, original_model.get_residual()))
+    orig_array = np.column_stack(
+        (orig_array, np.square(orig_array[:, 4])))
+    orig_array = np.column_stack(
+        (orig_array, abs(orig_array[:, 4])))
+
+    """
+    test_array order: 0 - x_test, 1 - y_test, 2 - bagged_representor, 3 - bagged_residual, 4 - bagged_residual squared, 5 - abs(residual),
+    6 - orig_representor, 7 - residual btw orig and bm, 8 - 7 squared, 9 - abs(7)
+    """
+    test_array.view('f8,f8').sort(order=['f0'], axis=0)
+
+    # Calculation of y_test_hat using representor function
+    test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
+
+    for i in range(len(test_array[:, 0])):
+        test_array[i, 2] = representor(bm_array[:, 3], bm_array[:, 2], test_array[i, 0])
+
+    test_array = np.column_stack(
+        (test_array, test_array[:, 1] - test_array[:, 2]))
+
+    test_array = np.column_stack(
+        (test_array, np.square(test_array[:, 3])))
+
+    test_array = np.column_stack(
+        (test_array, abs(test_array[:, 3])))
 
     test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
 
     for i in range(len(test_array[:, 0])):
-        test_array[i, 7] = representor(train_array[:, 3], train_array[:, 2], test_array[i, 0])
+        test_array[i, 6] = representor(orig_array[:, 3], orig_array[:, 2], test_array[i, 0])
 
     test_array = np.column_stack(
-        (test_array, test_array[:, 7] - test_array[:, 4]))
+        (test_array, test_array[:, 6] - test_array[:, 2]))
 
-    # test_array = np.append(test_array, np.zeros((len(test_array), 1), dtype=float), axis=1)
+    test_array = np.column_stack(
+        (test_array, np.square(test_array[:, 7])))
 
-    # test_array[:, 8] = test_array[:, 7] - test_array[:, 4]
+    test_array = np.column_stack(
+        (test_array, abs(test_array[:, 7])))
 
-    with np.printoptions(threshold=np.inf):
-        print(test_array)
+    bm_mse = np.sum(bm_array[:, 5]) / len(bm_array[:, 5])
+    print(f"Bagged model on bagged data MSE equals {bm_mse}")
 
-    train_mse = np.sum(train_array[:, 7]) / len(train_array[:, 7])
-    print(train_mse)
-    test_mse = np.sum(test_array[:, 6]) / len(test_array[:, 6])
-    print(test_mse)
+    bm_rmse = math.sqrt(np.sum(bm_array[:, 5]) / len(bm_array[:, 5]))
+    print(f"Bagged model on bagged data RMSE equals {bm_rmse}")
 
-    return test_array
+    bm_mae = np.sum(bm_array[:, 6]) / len(bm_array[:, 6])
+    print(f"Bagged model on bagged data MAE equals {bm_mae}")
+    print('\n')
+
+    bm_orig_mse = np.sum(test_array[:, 4]) / len(test_array[:, 4])
+    print(f"Bagged model on original data MSE equals {bm_orig_mse}")
+
+    bm_orig_rmse = math.sqrt(np.sum(test_array[:, 4]) / len(test_array[:, 4]))
+    print(f"Bagged model on original data RMSE equals {bm_orig_rmse}")
+
+    bm_orig_mae = np.sum(bm_array[:, 5]) / len(bm_array[:, 5])
+    print(f"Bagged model on original data MAE equals {bm_orig_mae}")
+    print('\n')
+
+    orig_mse = np.sum(orig_array[:, 5]) / len(orig_array[:, 5])
+    print(f"Original model on original data MSE equals {orig_mse}")
+
+    orig_rmse = math.sqrt(np.sum(bm_array[:, 5]) / len(orig_array[:, 5]))
+    print(f"Original model on original data RMSE equals {orig_rmse}")
+
+    orig_mae = np.sum(orig_array[:, 6]) / len(orig_array[:, 6])
+    print(f"Original model on original data MAE equals {orig_mae}")
+    print('\n')
+
+    test_mse = np.sum(test_array[:, 8]) / len(test_array[:, 8])
+    print(f"Original vs bagged MSE equals {test_mse}")
+
+    test_rmse = math.sqrt(np.sum(test_array[:, 8]) / len(test_array[:, 8]))
+    print(f"Original vs bagged RMSE equals {test_rmse}")
+
+    test_mae = np.sum(test_array[:, 9]) / len(test_array[:, 9])
+    print(f"Original vs bagged MAE equals {test_mae}")
+
+    error_list = [
+        [bm_mse, bm_rmse, bm_mae],
+        [bm_orig_mse, bm_orig_rmse, bm_orig_mae],
+        [orig_mse, orig_rmse, orig_mae],
+        [test_mse, test_rmse, test_mae]]
+
+    end_time = time.perf_counter()
+    print(f"Calculation of errors completed, it took {end_time-start_time:0.4f} seconds")
+
+    return error_list
