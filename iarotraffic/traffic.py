@@ -241,9 +241,8 @@ def bagging(aggregative: pd.DataFrame, grid_size_x=40, grid_size_y=40) -> pd.Dat
     # Calculating the centroid adn the weight of each bag
     bagged_data = aggregative.groupby(
         ['id', 'direction', 'grid_density', 'grid_flow'],
-        as_index=False).agg(bag_size=('id', 'count'),
-        sum_flow=('flow', 'sum'),
-        sum_density=('density', 'sum'))
+        as_index=False).agg(
+            bag_size=('id', 'count'), sum_flow=('flow', 'sum'), sum_density=('density', 'sum'))
     bagged_data['centroid_flow'] = bagged_data.sum_flow.div(bagged_data.bag_size)
     bagged_data['centroid_density'] = bagged_data.sum_density.div(bagged_data.bag_size)
     bagged_data['weight'] = bagged_data.bag_size.div(len(aggregative))
@@ -377,7 +376,8 @@ def in_sample_mse(model) -> list:
 
     return error_list
 
-def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, select_direction: int = 2):
+def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, month: str, year: int, tau: float = 0.5, select_direction: int = 2):
+
     start_time = time.perf_counter()
     x_bag = bagged_data[bagged_data.direction == select_direction].centroid_density
     y_bag = bagged_data[bagged_data.direction == select_direction].centroid_flow
@@ -390,38 +390,50 @@ def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, selec
 
     test_array = np.column_stack((x_orig, y_orig))
 
+    fig_name = "Bagged data scatter - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plt.scatter(
         bagged_data[bagged_data.direction == select_direction].centroid_density,
         bagged_data[bagged_data.direction == select_direction].centroid_flow,
         c='b',
-        marker='X',
+        marker='o',
         s=bagged_data[bagged_data.direction == select_direction].weight*10000,
         label="Bagged data scatter")
-    plt.savefig(fname="Bagged data scatter")
+    plt.savefig(fname=fig_name)
+    plt.clf()
 
+    fig_name = "Original data scatter - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plt.scatter(
         original_data[original_data.direction == select_direction].density,
         original_data[original_data.direction == select_direction].flow,
         c='r',
-        marker='o',
+        marker='.',
         label="Original data scatter")
-    plt.savefig(fname="Original data scatter")
+    plt.savefig(fname=fig_name)
+    plt.clf()
 
-    bagged_model = wCQER.wCQR(y=y_bag, x=x_bag, w=w_bag, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+    bagged_model = wCQER.wCQR(y=y_bag, x=x_bag, w=w_bag, tau=tau, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
     bagged_model.optimize(OPT_LOCAL)
 
-    original_model = CQERG.CQRG(y_orig, x_orig, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+    original_model = CQERG.CQRG(y_orig, x_orig, tau=tau, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
     original_model.optimize(OPT_LOCAL)
 
+    fig_name = "Bagged model on bagged data - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plot2d(
         bagged_model, x_select=0,
-        label_name="Bagged model on bagged data", fig_name="Bagged model on bagged data")
+        label_name="Bagged model on bagged data", fig_name=fig_name)
+    plt.clf()
+
+    fig_name = "Bagged model on original data - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plot2d_test(
         bagged_model, test_array, x_select=0,
-        label_name="Bagged model on original data", fig_name="Bagged model on original data")
+        label_name="Bagged model on original data", fig_name=fig_name)
+    plt.clf()
+
+    fig_name = "Original model on original data - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plot2d(
         original_model, x_select=0,
-        label_name="Original model on original data", fig_name="Original model on original data")
+        label_name="Original model on original data", fig_name=fig_name)
+    plt.clf()
 
     """
     bm_array order:
@@ -464,7 +476,8 @@ def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, selec
         (orig_array, abs(orig_array[:, 4])))
 
     """
-    test_array order: 0 - x_test, 1 - y_test, 2 - bagged_representor, 3 - bagged_residual, 4 - bagged_residual squared, 5 - abs(residual),
+    test_array order: 0 - x_test, 1 - y_test, 2 - bagged_representor, 3 - bagged_residual,
+    4 - bagged_residual squared, 5 - abs(residual),
     6 - orig_representor, 7 - residual btw orig and bm, 8 - 7 squared, 9 - abs(7)
     """
     test_array.view('f8,f8').sort(order=['f0'], axis=0)

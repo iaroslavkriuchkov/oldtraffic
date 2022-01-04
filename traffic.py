@@ -213,7 +213,7 @@ def processing_diff_models(train_params: list, output='FILE'):
     # Bagging train data
     grid = iarotr.bagging(df_space_agg)
 
-    error_list = iarotr.compare_models(grid, df_space_agg)
+    error_list = iarotr.compare_models(grid, df_space_agg, train_params[5], train_params[2])
 
     end_time = time.perf_counter()
     print(f"Execution time: {end_time-start_time:0.4f}")
@@ -296,27 +296,35 @@ def main_diff_models():
     wb = Workbook()
     sheet1 = wb.add_sheet('MSE Results')
     train_params = [
-        ['146', '01', 2018, 1, 31, 'January']]
-
-    """
-    ,
-    ['146', '01', 2018, 32, 59, 'February'],
-    ['146', '01', 2018, 60, 90, 'March'],
-    ['146', '01', 2018, 91, 120, 'April'],
-    ['146', '01', 2018, 121, 151, 'May'],
-    ['146', '01', 2018, 152, 181, 'June'],
-    ['146', '01', 2018, 182, 212, 'July'],
-    ['146', '01', 2018, 213, 243, 'August'],
-    ['146', '01', 2018, 244, 273, 'September'],
-    ['146', '01', 2018, 274, 304, 'October'],
-    ['146', '01', 2018, 305, 334, 'November'],
-    ['146', '01', 2018, 335, 365, 'December']]"""
+        ['146', '01', 2018, 1, 31, 'January'],
+        ['146', '01', 2018, 32, 59, 'February'],
+        ['146', '01', 2018, 60, 90, 'March'],
+        ['146', '01', 2018, 91, 120, 'April'],
+        ['146', '01', 2018, 121, 151, 'May'],
+        ['146', '01', 2018, 152, 181, 'June'],
+        ['146', '01', 2018, 182, 212, 'July'],
+        ['146', '01', 2018, 213, 243, 'August'],
+        ['146', '01', 2018, 244, 273, 'September'],
+        ['146', '01', 2018, 274, 304, 'October'],
+        ['146', '01', 2018, 305, 334, 'November'],
+        ['146', '01', 2018, 335, 365, 'December'],
+        ['146', '01', 2019, 1, 31, 'January'],
+        ['146', '01', 2019, 32, 59, 'February'],
+        ['146', '01', 2019, 60, 90, 'March'],
+        ['146', '01', 2019, 91, 120, 'April'],
+        ['146', '01', 2019, 121, 151, 'May'],
+        ['146', '01', 2019, 152, 181, 'June'],
+        ['146', '01', 2019, 182, 212, 'July'],
+        ['146', '01', 2019, 213, 243, 'August'],
+        ['146', '01', 2019, 244, 273, 'September'],
+        ['146', '01', 2019, 274, 304, 'October'],
+        ['146', '01', 2019, 305, 334, 'November'],
+        ['146', '01', 2019, 335, 365, 'December']]
 
     dir_name = './dir_' + train_params[0][0] + '_' + str(train_params[0][2])[2:4] \
         + '_' + datetime.datetime.now().strftime("%y%m%d-%H%M%S")
     os.makedirs(dir_name)
     os.chdir(dir_name)
-    os.makedirs('./parquetdata')
 
     sheet1.write(0, 1, 'Bb MSE')
     sheet1.write(0, 2, 'Bb RMSE')
@@ -333,10 +341,9 @@ def main_diff_models():
 
     for count, values in enumerate(train_params):
         start_time = time.perf_counter()
-        print(f"Starting the work for {train_params[count]}...")
         mse_list = processing_diff_models(train_params[count])
-        print(mse_list)
-        sheet1.write(count+1, 0, train_params[count][5])
+        cell1 = train_params[count][5] + " " + str(train_params[count][2])
+        sheet1.write(count+1, 0, cell1)
         sheet1.write(count+1, 1, mse_list[0][0])
         sheet1.write(count+1, 2, mse_list[0][1])
         sheet1.write(count+1, 3, mse_list[0][2])
@@ -350,11 +357,9 @@ def main_diff_models():
         sheet1.write(count+1, 14, mse_list[3][1])
         sheet1.write(count+1, 15, mse_list[3][2])
         end_time = time.perf_counter()
-        print(f"Execution time for {train_params[count]}: {end_time-start_time:0.4f}")
 
     wb.save('MSE.xls')
     end_time1 = time.perf_counter()
-    print(f"Execution time: {end_time1-start_time1:0.4f}")
     return None
 
 # if __name__ == "__main__":
