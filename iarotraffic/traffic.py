@@ -89,6 +89,7 @@ def download_lam_day_report(tms_id: str, region: str, year: int, day: int,
 
         # Assigning dates
         df['date'] = datetime.date(year, 1, 1) + datetime.timedelta(day - 1)
+        df['cars'] = df['vehicle'].apply(lambda x: 1 if x == 1 else 0)
 
         # Deleting faulty data point.
         if if_faulty is True:
@@ -201,18 +202,22 @@ def flow_speed_calculation(df: pd.DataFrame, aggregation_time_period=DEF_AGG_TIM
     # Aggregate flow and speed by time
     time_agg = df.groupby(['id', 'date', 'aggregation', 'direction', 'lane'],
                           as_index=False).agg(time_mean_speed=('speed', 'mean'),
-                                              flow=('speed', 'count'))
+                                              flow=('speed', 'count'),
+                                              cars=('cars', 'sum'))
     time_agg['hourlyflow'] = 60/aggregation_time_period * time_agg.flow
+    time_agg['hourlycars'] = 60/aggregation_time_period * time_agg.cars
     time_agg['qdivv'] = time_agg['hourlyflow'].div(
         time_agg['time_mean_speed'].values)
 
     # Aggregate flow and speed by space and calculate density. Calculate the weights
     space_agg = time_agg.groupby(['id', 'date', 'aggregation', 'direction'],
                                  as_index=False).agg(qdivvsum=('qdivv', 'sum'),
-                                                     flow=('hourlyflow', 'sum'))
+                                                     flow=('hourlyflow', 'sum'),
+                                                     cars=('hourlycars', 'sum'))
     space_agg['space_mean_speed'] = 1/(space_agg.qdivvsum.div(space_agg.flow))
     space_agg['density'] = space_agg.flow.div(space_agg.space_mean_speed)
     space_agg['weight'] = float(1/len(space_agg))
+    space_agg['car_proportion'] = space_agg.cars.div(space_agg.flow)
 
     end_time = time.perf_counter()
     print(
@@ -376,7 +381,8 @@ def in_sample_mse(model) -> list:
 
     return error_list
 
-def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, month: str, year: int, tau: float = 0.5, select_direction: int = 2):
+def compare_models(bagged_data: pd.DataFrame,
+                   original_data: pd.DataFrame, month: str, year: int, tau: float = 0.5, select_direction: int = 2):
 
     start_time = time.perf_counter()
     x_bag = bagged_data[bagged_data.direction == select_direction].centroid_density
@@ -405,8 +411,9 @@ def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, month
     plt.scatter(
         original_data[original_data.direction == select_direction].density,
         original_data[original_data.direction == select_direction].flow,
-        c='r',
+        c=original_data[original_data.direction == select_direction].car_proportion,
         marker='.',
+        cmap="RdYlGn",
         label="Original data scatter")
     plt.savefig(fname=fig_name)
     plt.clf()
@@ -511,6 +518,9 @@ def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, month
     test_array = np.column_stack(
         (test_array, abs(test_array[:, 7])))
 
+    max_density = test_array[np.argmax(np.max(test_array[:, 2])), 0]
+    max_flow = np.max(test_array[:, 2])
+
     bm_mse = np.sum(bm_array[:, 5]) / len(bm_array[:, 5])
     print(f"Bagged model on bagged data MSE equals {bm_mse}")
 
@@ -554,7 +564,8 @@ def compare_models(bagged_data: pd.DataFrame, original_data: pd.DataFrame, month
         [bm_mse, bm_rmse, bm_mae],
         [bm_orig_mse, bm_orig_rmse, bm_orig_mae],
         [orig_mse, orig_rmse, orig_mae],
-        [test_mse, test_rmse, test_mae]]
+        [test_mse, test_rmse, test_mae]
+        [max_density, max_flow, 0]]
 
     end_time = time.perf_counter()
     print(f"Calculation of errors completed, it took {end_time-start_time:0.4f} seconds")

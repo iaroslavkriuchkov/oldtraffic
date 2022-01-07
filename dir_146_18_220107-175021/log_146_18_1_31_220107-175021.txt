@@ -1,0 +1,49 @@
+Created by Iaroslav Kriuchkov
+Aalto University School of Business
+Department of Information and Service Management
+
+
+Log-file for traffic modeling
+Last update: 07-01-2022 17:50
+
+
+Train data from TMS #146 from 01-01-2018 to 31-01-2018.
+
+
+Test data is the same as train data.
+
+
+Trying to load train data...
+File parquetdata\data_146_18_1_31_6h_20h.gzip doesn't exist. Trying to download data from the server and save locally...
+Download successful - file for the sensor 146 for the day 1 in year 2018.                 Download took 5.7497 seconds
+Download successful - file for the sensor 146 for the day 2 in year 2018.                 Download took 1.2426 seconds
+Download successful - file for the sensor 146 for the day 3 in year 2018.                 Download took 1.2883 seconds
+Download successful - file for the sensor 146 for the day 4 in year 2018.                 Download took 1.2830 seconds
+Download successful - file for the sensor 146 for the day 5 in year 2018.                 Download took 1.3646 seconds
+Download successful - file for the sensor 146 for the day 6 in year 2018.                 Download took 0.9740 seconds
+Download successful - file for the sensor 146 for the day 7 in year 2018.                 Download took 2.2047 seconds
+Download successful - file for the sensor 146 for the day 8 in year 2018.                 Download took 1.5536 seconds
+Download successful - file for the sensor 146 for the day 9 in year 2018.                 Download took 1.4737 seconds
+Download successful - file for the sensor 146 for the day 10 in year 2018.                 Download took 1.6333 seconds
+Download successful - file for the sensor 146 for the day 11 in year 2018.                 Download took 1.5846 seconds
+Download successful - file for the sensor 146 for the day 12 in year 2018.                 Download took 1.4504 seconds
+Download successful - file for the sensor 146 for the day 13 in year 2018.                 Download took 1.1452 seconds
+Download successful - file for the sensor 146 for the day 14 in year 2018.                 Download took 0.9456 seconds
+Download successful - file for the sensor 146 for the day 15 in year 2018.                 Download took 1.5859 seconds
+Download successful - file for the sensor 146 for the day 16 in year 2018.                 Download took 1.5298 seconds
+Download successful - file for the sensor 146 for the day 17 in year 2018.                 Download took 1.2801 seconds
+Download successful - file for the sensor 146 for the day 18 in year 2018.                 Download took 1.2738 seconds
+Download successful - file for the sensor 146 for the day 19 in year 2018.                 Download took 1.6844 seconds
+Download successful - file for the sensor 146 for the day 20 in year 2018.                 Download took 0.9975 seconds
+Download successful - file for the sensor 146 for the day 21 in year 2018.                 Download took 1.0760 seconds
+Download successful - file for the sensor 146 for the day 22 in year 2018.                 Download took 1.4920 seconds
+Download successful - file for the sensor 146 for the day 23 in year 2018.                 Download took 1.5377 seconds
+Download successful - file for the sensor 146 for the day 24 in year 2018.                 Download took 1.2494 seconds
+Download successful - file for the sensor 146 for the day 25 in year 2018.                 Download took 1.6879 seconds
+Download successful - file for the sensor 146 for the day 26 in year 2018.                 Download took 1.6280 seconds
+Download successful - file for the sensor 146 for the day 27 in year 2018.                 Download took 1.1225 seconds
+Download successful - file for the sensor 146 for the day 28 in year 2018.                 Download took 0.9619 seconds
+Download successful - file for the sensor 146 for the day 29 in year 2018.                 Download took 1.4683 seconds
+Download successful - file for the sensor 146 for the day 30 in year 2018.                 Download took 1.5649 seconds
+Download successful - file for the sensor 146 for the day 31 in year 2018.                 Download took 1.3697 seconds
+Loading file from server took 53.1439 seconds. Saving .gzip file...
