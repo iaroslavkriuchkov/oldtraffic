@@ -1,0 +1,146 @@
+Created by Iaroslav Kriuchkov
+Aalto University School of Business
+Department of Information and Service Management
+
+
+Log-file for traffic modeling
+Last update: 09-01-2022 14:00
+
+
+Train data from TMS #146 from 01-01-2018 to 31-01-2018.
+
+
+Test data is the same as train data.
+
+
+Trying to load train data...
+Loading successfull. Data loading took 0.3814 seconds
+Trying to load test data...
+Test data loaded.
+Aggregating train data...
+Aggregating data for modeling took 2.7432 seconds
+Aggregating test data...
+Optimizing locally.
+Estimating the additive model locally with mosek solver.
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 59292           
+  Cones                  : 0               
+  Scalar variables       : 1458            
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.01            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.07    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 59292           
+  Cones                  : 0               
+  Scalar variables       : 1458            
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 4               
+Optimizer  - solved problem         : the dual        
+Optimizer  - Constraints            : 486
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 59049             conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.05              dense det. time        : 0.00            
+Factor     - ML order time          : 0.01              GP order time          : 0.00            
+Factor     - nonzeros before factor : 1.18e+05          after factor           : 1.18e+05        
+Factor     - dense dim.             : 0                 flops                  : 3.96e+07        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   4.9e+05  9.9e+03  7.8e+07  0.00e+00   -7.504942396e+02  9.812214871e+05   6.4e+03  0.16  
+1   6.6e+04  1.3e+03  1.1e+07  -1.00e+00  -7.459685675e+02  9.790498782e+05   8.6e+02  0.21  
+2   1.7e+04  3.4e+02  2.7e+06  -9.94e-01  -7.293772039e+02  9.699974727e+05   2.2e+02  0.22  
+3   3.4e+03  6.7e+01  5.3e+05  -9.74e-01  -6.424455541e+02  9.206650691e+05   4.3e+01  0.24  
+4   4.8e+02  9.6e+00  7.6e+04  -8.69e-01  -1.964130723e+02  6.599012242e+05   6.2e+00  0.26  
+5   2.4e+01  4.9e-01  3.9e+03  -3.14e-01  7.288718398e+02   8.804394037e+04   3.1e-01  0.28  
+6   1.4e+00  2.9e-02  2.3e+02  1.17e+00   3.542482149e+02   3.171945848e+03   1.9e-02  0.30  
+7   1.4e-01  2.8e-03  2.2e+01  1.56e+00   8.427582814e+01   2.784540609e+02   1.8e-03  0.33  
+8   3.6e-02  7.3e-04  5.8e+00  6.71e-01   4.256483617e+01   9.358624533e+01   4.7e-04  0.34  
+9   1.6e-03  3.2e-05  2.6e-01  9.24e-01   3.002564128e+01   3.247462151e+01   2.1e-05  0.35  
+10  1.4e-03  2.8e-05  2.2e-01  3.39e-01   2.933858213e+01   3.161905407e+01   1.8e-05  0.37  
+11  1.2e-03  2.3e-05  1.8e-01  3.48e-01   2.849552441e+01   3.057142503e+01   1.5e-05  0.38  
+12  8.5e-04  1.7e-05  1.3e-01  2.70e-01   2.700560599e+01   2.874554839e+01   1.1e-05  0.39  
+13  5.6e-04  1.1e-05  8.9e-02  3.14e-01   2.493099887e+01   2.623435902e+01   7.3e-06  0.40  
+14  4.0e-04  8.1e-06  6.4e-02  5.88e-01   2.324981605e+01   2.421815528e+01   5.2e-06  0.42  
+15  4.0e-04  8.0e-06  6.4e-02  7.08e-01   2.324618440e+01   2.421174689e+01   5.2e-06  0.43  
+16  3.2e-04  6.5e-06  5.1e-02  7.37e-01   2.233128594e+01   2.315458796e+01   4.2e-06  0.44  
+17  2.4e-04  4.8e-06  3.8e-02  7.01e-01   2.117712738e+01   2.180561052e+01   3.1e-06  0.45  
+18  2.1e-04  4.3e-06  3.4e-02  8.40e-01   2.091301516e+01   2.148235571e+01   2.7e-06  0.46  
+19  1.8e-04  3.5e-06  2.8e-02  8.17e-01   2.042172740e+01   2.090066537e+01   2.3e-06  0.47  
+20  1.3e-04  2.5e-06  2.0e-02  7.18e-01   1.984186187e+01   2.020150949e+01   1.6e-06  0.49  
+21  1.2e-04  2.5e-06  2.0e-02  8.45e-01   1.956535574e+01   1.992547748e+01   1.6e-06  0.50  
+22  1.2e-04  2.5e-06  2.0e-02  9.29e-01   1.956422861e+01   1.992222988e+01   1.6e-06  0.51  
+23  9.2e-05  1.8e-06  1.5e-02  9.21e-01   1.931178931e+01   1.958441669e+01   1.2e-06  0.53  
+24  5.8e-05  1.2e-06  9.2e-03  1.01e+00   1.903574797e+01   1.920581903e+01   7.5e-07  0.54  
+25  1.6e-05  3.3e-07  2.6e-03  9.99e-01   1.866957252e+01   1.871666473e+01   2.1e-07  0.56  
+26  7.6e-06  1.5e-07  1.2e-03  1.04e+00   1.847830259e+01   1.849977312e+01   9.9e-08  0.58  
+27  4.0e-06  8.1e-08  6.4e-04  1.06e+00   1.835452038e+01   1.836551049e+01   5.2e-08  0.59  
+28  3.9e-06  7.8e-08  6.2e-04  1.03e+00   1.835155480e+01   1.836220757e+01   5.0e-08  0.60  
+29  2.7e-06  5.3e-08  4.2e-04  1.03e+00   1.829883192e+01   1.830605691e+01   3.4e-08  0.61  
+30  2.4e-06  4.8e-08  3.8e-04  9.98e-01   1.829180764e+01   1.829832035e+01   3.1e-08  0.62  
+31  1.6e-06  3.2e-08  2.5e-04  1.01e+00   1.825985089e+01   1.826416893e+01   2.0e-08  0.64  
+32  1.0e-06  2.1e-08  1.6e-04  1.03e+00   1.823189023e+01   1.823465475e+01   1.3e-08  0.65  
+33  1.0e-06  2.0e-08  1.6e-04  1.01e+00   1.823035724e+01   1.823306033e+01   1.3e-08  0.66  
+34  3.2e-07  6.5e-09  5.2e-05  1.00e+00   1.819837734e+01   1.819925303e+01   4.2e-09  0.67  
+35  3.2e-07  6.5e-09  5.1e-05  1.04e+00   1.819886949e+01   1.819973295e+01   4.2e-09  0.68  
+36  7.3e-08  1.5e-09  7.7e-06  1.00e+00   1.818808573e+01   1.818821485e+01   9.5e-10  0.70  
+37  6.0e-09  7.5e-10  6.2e-07  1.00e+00   1.818471961e+01   1.818473000e+01   7.7e-11  0.71  
+38  3.3e-10  5.4e-10  3.4e-08  1.00e+00   1.818446187e+01   1.818446245e+01   4.3e-12  0.72  
+39  4.6e-12  3.2e-10  2.3e-11  1.00e+00   1.818444469e+01   1.818444469e+01   1.4e-15  0.73  
+Basis identification started.
+Primal basis identification phase started.
+Primal basis identification phase terminated. Time: 0.05
+Dual basis identification phase started.
+Dual basis identification phase terminated. Time: 0.00
+Basis identification terminated. Time: 0.08
+Optimizer terminated. Time: 0.83    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 1.8184444692e+01    nrm: 1e+04    Viol.  con: 8e-11    var: 0e+00  
+  Dual.    obj: 1.8184444693e+01    nrm: 6e-01    Viol.  con: 0e+00    var: 6e-07  
+
+Basic solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 1.8184444688e+01    nrm: 9e+03    Viol.  con: 8e-10    var: 0e+00  
+  Dual.    obj: 1.8184444688e+01    nrm: 1e-01    Viol.  con: 4e-07    var: 2e-15  
+Max density is 88.51832567395016
+Max flow is 5571.292358331396
+88.51832567395016
+Bagged model on bagged data MSE equals 401774.97223935457
+Bagged model on bagged data RMSE equals 633.857217549311
+Bagged model on bagged data MAE equals 440.0749012678161
+
+
+Bagged model on original data MSE equals 37255.9813338939
+Bagged model on original data RMSE equals 193.0180855098659
+Bagged model on original data MAE equals 401774.97223935457
+
+
+
+
+Original vs bagged MSE equals 10689331.49118902
+Original vs bagged RMSE equals 3269.4543109193346
+Original vs bagged MAE equals 3036.3494290303593
+Calculation of errors completed, it took 17.6971 seconds
+Execution time: 20.9574

@@ -52,7 +52,7 @@ def plot2d(model, x_select=0, label_name="estimated function", fig_name=None, me
     # Remove top and right axes
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
-    if fig_name == None:
+    if fig_name is None:
         plt.show()
     else:
         plt.savefig(fig_name)
@@ -107,7 +107,7 @@ def plot2d_test(model, test_array, x_select=0, label_name="estimated function", 
     # Remove top and right axes
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
-    if fig_name == None:
+    if fig_name is None:
         plt.show()
     else:
         plt.savefig(fig_name)
@@ -120,7 +120,7 @@ def plot3d(model, x_select_1=0, x_select_2=1, fig_name=None, line_transparent=Fa
         model: The input model for plotting.
         x_select_1 (Integer): The selected x for plotting.
         x_select_2 (Integer): The selected x for plotting.
-        fun (String, optional): FUN_PROD (production frontier) or FUN_COST (cost frontier). Defaults to FUN_PROD.       
+        fun (String, optional): FUN_PROD (production frontier) or FUN_COST (cost frontier). Defaults to FUN_PROD.
         fig_name (String, optional): The name of figure to save. Defaults to None.
         line_transparent (bool, optional): control the transparency of the lines. Defaults to False.
         pane_transparent (bool, optional): control the transparency of the pane. Defaults to False.
@@ -144,13 +144,13 @@ def plot3d(model, x_select_1=0, x_select_2=1, fig_name=None, line_transparent=Fa
                         tmp_planes[4], tmp_planes[5])
 
     # make the grid lines transparent
-    if line_transparent == False:
+    if line_transparent is False:
         ax.xaxis._axinfo["grid"]['color'] = (1, 1, 1, 0)
         ax.yaxis._axinfo["grid"]['color'] = (1, 1, 1, 0)
         ax.zaxis._axinfo["grid"]['color'] = (1, 1, 1, 0)
 
     # make the panes transparent
-    if pane_transparent != False:
+    if pane_transparent is not False:
         ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
         ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
         ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
@@ -175,7 +175,7 @@ def plot3d(model, x_select_1=0, x_select_2=1, fig_name=None, line_transparent=Fa
     ax.set_ylabel("Input $x2$")
     ax.set_zlabel("Output $y$", rotation=0)
 
-    if fig_name == None:
+    if fig_name is None:
         plt.show()
     else:
         plt.savefig(fig_name)

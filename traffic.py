@@ -213,7 +213,7 @@ def processing_diff_models(train_params: list, output='FILE'):
     # Bagging train data
     grid = iarotr.bagging(df_space_agg)
 
-    error_list = iarotr.compare_models(grid, df_space_agg, train_params[5], train_params[2])
+    error_list = iarotr.compare_models(grid, df_space_agg, train_params[5], train_params[2], train_params[6])
 
     end_time = time.perf_counter()
     print(f"Execution time: {end_time-start_time:0.4f}")
@@ -278,15 +278,16 @@ def main_diff_models():
     start_time1 = time.perf_counter()
     wb = Workbook()
     sheet1 = wb.add_sheet('MSE Results')
+    tau_list = [0.05, 0.25, 0.5, 0.75, 0.95]
     train_params = [
-        ['146', '01', 2018, 1, 31, 'January']]
-    """,
-        ['146', '01', 2018, 32, 59, 'February'],
-        ['146', '01', 2018, 60, 90, 'March'],
-        ['146', '01', 2018, 91, 120, 'April'],
-        ['146', '01', 2018, 121, 151, 'May'],
-        ['146', '01', 2018, 152, 181, 'June'],
-        ['146', '01', 2018, 182, 212, 'July'],
+        ['146', '01', 2018, 1, 31, 'January', 0.5],
+        ['146', '01', 2018, 32, 59, 'February', 0.5],
+        ['146', '01', 2018, 60, 90, 'March', 0.5],
+        ['146', '01', 2018, 91, 120, 'April', 0.5],
+        ['146', '01', 2018, 121, 151, 'May', 0.5],
+        ['146', '01', 2018, 152, 181, 'June', 0.5]]
+
+    """['146', '01', 2018, 182, 212, 'July'],
         ['146', '01', 2018, 213, 243, 'August'],
         ['146', '01', 2018, 244, 273, 'September'],
         ['146', '01', 2018, 274, 304, 'October'],
@@ -309,45 +310,63 @@ def main_diff_models():
         + '_' + datetime.datetime.now().strftime("%y%m%d-%H%M%S")
     os.makedirs(dir_name)
     os.chdir(dir_name)
-
-    sheet1.write(0, 1, 'Bb MSE')
-    sheet1.write(0, 2, 'Bb RMSE')
-    sheet1.write(0, 3, 'Bb MAE')
-    sheet1.write(0, 5, 'Bo MSE')
-    sheet1.write(0, 6, 'Bo RMSE')
-    sheet1.write(0, 7, 'Bo MAE')
-    sheet1.write(0, 9, 'Oo MSE')
-    sheet1.write(0, 10, 'Oo RMSE')
-    sheet1.write(0, 11, 'Oo MAE')
-    sheet1.write(0, 13, 'OB MSE')
-    sheet1.write(0, 14, 'OB RMSE')
-    sheet1.write(0, 15, 'OB MAE')
-    sheet1.write(0, 17, 'max Density')
-    sheet1.write(0, 18, 'max Flow')
+    sheet1.write(0, 0, 'Month')
+    sheet1.write(0, 1, 'tau')
+    sheet1.write(0, 3, 'Bb MSE')
+    sheet1.write(0, 4, 'Bb RMSE')
+    sheet1.write(0, 5, 'Bb MAE')
+    sheet1.write(0, 7, 'Bo MSE')
+    sheet1.write(0, 8, 'Bo RMSE')
+    sheet1.write(0, 9, 'Bo MAE')
+    sheet1.write(0, 11, 'Oo MSE')
+    sheet1.write(0, 12, 'Oo RMSE')
+    sheet1.write(0, 13, 'Oo MAE')
+    sheet1.write(0, 15, 'OB MSE')
+    sheet1.write(0, 16, 'OB RMSE')
+    sheet1.write(0, 17, 'OB MAE')
+    sheet1.write(0, 19, 'max Density bagged')
+    sheet1.write(0, 20, 'max Flow bagged')
+    sheet1.write(0, 22, 'max Density orig')
+    sheet1.write(0, 23, 'max Flow orig')
 
     for count, values in enumerate(train_params):
-        start_time = time.perf_counter()
-        mse_list = processing_diff_models(train_params[count])
-        cell1 = train_params[count][5] + " " + str(train_params[count][2])
-        sheet1.write(count+1, 0, cell1)
-        sheet1.write(count+1, 1, mse_list[0][0])
-        sheet1.write(count+1, 2, mse_list[0][1])
-        sheet1.write(count+1, 3, mse_list[0][2])
-        sheet1.write(count+1, 5, mse_list[1][0])
-        sheet1.write(count+1, 6, mse_list[1][1])
-        sheet1.write(count+1, 7, mse_list[1][2])
-        sheet1.write(count+1, 9, mse_list[2][0])
-        sheet1.write(count+1, 10, mse_list[2][1])
-        sheet1.write(count+1, 11, mse_list[2][2])
-        sheet1.write(count+1, 13, mse_list[3][0])
-        sheet1.write(count+1, 14, mse_list[3][1])
-        sheet1.write(count+1, 15, mse_list[3][2])
-        sheet1.write(count+1, 17, mse_list[4][0])
-        sheet1.write(count+1, 18, mse_list[4][1])
-        end_time = time.perf_counter()
+        month_dir_name = './' + train_params[count][5] + "_" + str(train_params[count][2])
+        os.makedirs(month_dir_name)
+        os.chdir(month_dir_name)
+        for tau in tau_list:
+            start_time = time.perf_counter()
+            tau_dir_name = './tau_' + str(int(tau*100))
+            os.makedirs(tau_dir_name)
+            os.chdir(tau_dir_name)
+            train_params[count][6] = tau
+            mse_list = processing_diff_models(train_params[count])
+            cell1 = train_params[count][5] + " " + str(train_params[count][2])
+            cell2 = str(train_params[count][6])
+            sheet1.write(count+1, 0, cell1)
+            sheet1.write(count+1, 1, cell2)
+            sheet1.write(count+1, 3, mse_list[0][0])
+            sheet1.write(count+1, 4, mse_list[0][1])
+            sheet1.write(count+1, 5, mse_list[0][2])
+            sheet1.write(count+1, 7, mse_list[1][0])
+            sheet1.write(count+1, 8, mse_list[1][1])
+            sheet1.write(count+1, 9, mse_list[1][2])
+            sheet1.write(count+1, 11, mse_list[2][0])
+            sheet1.write(count+1, 12, mse_list[2][1])
+            sheet1.write(count+1, 13, mse_list[2][2])
+            sheet1.write(count+1, 15, mse_list[3][0])
+            sheet1.write(count+1, 16, mse_list[3][1])
+            sheet1.write(count+1, 17, mse_list[3][2])
+            sheet1.write(count+1, 19, mse_list[4][0])
+            sheet1.write(count+1, 20, mse_list[4][1])
+            sheet1.write(count+1, 22, mse_list[5][0])
+            sheet1.write(count+1, 23, mse_list[5][1])
+            os.chdir('../')
+            end_time = time.perf_counter()
+        os.chdir('../')
 
     wb.save('MSE.xls')
     end_time1 = time.perf_counter()
+    print(f"Execution time: {end_time1-start_time1:0.4f}")
     return None
 
 # if __name__ == "__main__":

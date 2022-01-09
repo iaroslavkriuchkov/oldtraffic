@@ -1,6 +1,7 @@
 # Import dependencies
 
 from typing import Sequence
+from numpy.core.fromnumeric import size
 from numpy.core.numeric import _moveaxis_dispatcher
 import pandas as pd
 import numpy as np
@@ -24,7 +25,7 @@ DEF_COL_NAMES = ['id', 'year', 'day', 'hour',
                  'minute', 'second', 'hund_second', 'length', 'lane',
                  'direction', 'vehicle', 'speed', 'faulty', 'total_time',
                  'time_interval', 'queue_start']
-DEF_FILEPATH = '../parquetdata'
+DEF_FILEPATH = '../../../parquetdata'
 DEF_AGG_TIME_PER = 5
 
 
@@ -381,6 +382,82 @@ def in_sample_mse(model) -> list:
 
     return error_list
 
+
+def iaroplot(x_original, y_original, proportion, x_bagged, y_bagged, weight,
+             bagged_model_x, bagged_model_y, bagged_model_f, orig_model_x, orig_model_y, orig_model_f, suptitle):
+
+    plt.clf()
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10))
+
+    # [0; 0]
+    axs[0, 0].scatter(
+        x_original,
+        y_original,
+        marker='.',
+        c="k")
+    axs[0, 0].set_title("original data scatter")
+
+    # [0; 1]
+    axs[0, 1].scatter(
+        x_original,
+        y_original,
+        c=proportion,
+        marker='.',
+        cmap="RdYlGn")
+    axs[0, 1].set_title("car proportion data scatter")
+
+    # [0; 2]
+    axs[0, 2].scatter(
+        x_bagged,
+        y_bagged,
+        c='k',
+        marker='o',
+        s=weight*10000)
+    axs[0, 2].set_title("bagged data scatter")
+
+    # [1; 0]
+    x = np.array(bagged_model_x).T[0]
+    y = np.array(bagged_model_y).T
+    yhat = np.array(bagged_model_f).T
+    data = (np.stack([x, y, yhat], axis=0)).T
+    # sort
+    data = data[np.argsort(data[:, 0])].T
+    x, y, f = data[0], data[1], data[2]
+
+    axs[1, 0].scatter(x, y, color="k", marker='x')
+    axs[1, 0].plot(x, f, color="r")
+    axs[1, 0].set_title("wCQR")
+
+    # [1; 1]
+    x_orig = np.array(orig_model_x).T[0]
+    y_orig = np.array(orig_model_y).T
+    yhat_orig = np.array(orig_model_f).T
+    data_orig = (np.stack([x_orig, y_orig, yhat_orig], axis=0)).T
+    # sort
+    data_orig = data_orig[np.argsort(data_orig[:, 0])].T
+    x_orig, y_orig = data_orig[0], data_orig[1]
+    axs[1, 1].scatter(x_orig, y_orig, color="k", marker='x')
+    axs[1, 1].plot(x, f, color="r")
+    axs[1, 1].set_title("wCQR on original data")
+
+    # [1; 2]
+    x = np.array(orig_model_x).T[0]
+    y = np.array(orig_model_y).T
+    yhat = np.array(orig_model_f).T
+    data = (np.stack([x, y, yhat], axis=0)).T
+    # sort
+    data = data[np.argsort(data[:, 0])].T
+    x, y, f = data[0], data[1], data[2]
+    axs[1, 2].scatter(x, y, color="k", marker='x')
+    axs[1, 2].plot(x, f, color="r")
+    axs[1, 2].set_title("CNLSG")
+
+    fig.suptitle(suptitle, fontsize=16)
+
+    plt.savefig("Fig")
+
+    return None
+
 def compare_models(bagged_data: pd.DataFrame,
                    original_data: pd.DataFrame, month: str, year: int, tau: float = 0.5, select_direction: int = 2):
 
@@ -396,17 +473,19 @@ def compare_models(bagged_data: pd.DataFrame,
 
     test_array = np.column_stack((x_orig, y_orig))
 
+    """
     fig_name = "Bagged data scatter - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plt.scatter(
         bagged_data[bagged_data.direction == select_direction].centroid_density,
         bagged_data[bagged_data.direction == select_direction].centroid_flow,
         c='b',
-        marker='o',
+        marker='.',
         s=bagged_data[bagged_data.direction == select_direction].weight*10000,
         label="Bagged data scatter")
     plt.savefig(fname=fig_name)
-    plt.clf()
+    plt.clf()"""
 
+    """
     fig_name = "Original data scatter - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plt.scatter(
         original_data[original_data.direction == select_direction].density,
@@ -416,7 +495,7 @@ def compare_models(bagged_data: pd.DataFrame,
         cmap="RdYlGn",
         label="Original data scatter")
     plt.savefig(fname=fig_name)
-    plt.clf()
+    plt.clf()"""
 
     bagged_model = wCQER.wCQR(y=y_bag, x=x_bag, w=w_bag, tau=tau, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
     bagged_model.optimize(OPT_LOCAL)
@@ -430,18 +509,20 @@ def compare_models(bagged_data: pd.DataFrame,
         label_name="Bagged model on bagged data", fig_name=fig_name)
     plt.clf()
 
+    """
     fig_name = "Bagged model on original data - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plot2d_test(
         bagged_model, test_array, x_select=0,
         label_name="Bagged model on original data", fig_name=fig_name)
-    plt.clf()
+    plt.clf()"""
 
+    """
     fig_name = "Original model on original data - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
     plot2d(
         original_model, x_select=0,
         label_name="Original model on original data", fig_name=fig_name)
     plt.clf()
-
+    """
     """
     bm_array order:
     0 - x_train, 1 - y_train, 2 - beta, 3 - alpha, 4 - residual, 5 - residual squared,
@@ -518,8 +599,17 @@ def compare_models(bagged_data: pd.DataFrame,
     test_array = np.column_stack(
         (test_array, abs(test_array[:, 7])))
 
-    max_density = test_array[np.argmax(np.max(test_array[:, 2])), 0]
-    max_flow = np.max(test_array[:, 2])
+    max_density_bagged = test_array[np.argmax(test_array, axis=0)[2]][0]
+    max_flow_bagged = np.max(test_array[:, 2])
+
+    max_density_orig = test_array[np.argmax(test_array, axis=0)[6]][0]
+    max_flow_orig = np.max(test_array[:, 6])
+
+    print(f"Max density of bagged model is {max_density_bagged}")
+    print(f"Max flow of bagged model is {max_flow_bagged}")
+
+    print(f"Max density of original model is {max_density_orig}")
+    print(f"Max flow of original model is {max_flow_orig}")
 
     bm_mse = np.sum(bm_array[:, 5]) / len(bm_array[:, 5])
     print(f"Bagged model on bagged data MSE equals {bm_mse}")
@@ -560,12 +650,30 @@ def compare_models(bagged_data: pd.DataFrame,
     test_mae = np.sum(test_array[:, 9]) / len(test_array[:, 9])
     print(f"Original vs bagged MAE equals {test_mae}")
 
+    iaroplot(
+        original_data[original_data.direction == select_direction].density,
+        original_data[original_data.direction == select_direction].flow,
+        original_data[original_data.direction == select_direction].car_proportion,
+        bagged_data[bagged_data.direction == select_direction].centroid_density,
+        bagged_data[bagged_data.direction == select_direction].centroid_flow,
+        bagged_data[bagged_data.direction == select_direction].weight,
+        bagged_model.x,
+        bagged_model.y,
+        bagged_model.get_frontier(),
+        original_model.x,
+        original_model.y,
+        original_model.get_frontier(),
+        "Figure - " + month + "_" + str(year) + "_tau_" + str(int(100*tau))
+    )
+
+    error_list = []
     error_list = [
         [bm_mse, bm_rmse, bm_mae],
         [bm_orig_mse, bm_orig_rmse, bm_orig_mae],
         [orig_mse, orig_rmse, orig_mae],
-        [test_mse, test_rmse, test_mae]
-        [max_density, max_flow, 0]]
+        [test_mse, test_rmse, test_mae],
+        [max_density_bagged, max_flow_bagged, 0],
+        [max_density_orig, max_flow_orig, 0]]
 
     end_time = time.perf_counter()
     print(f"Calculation of errors completed, it took {end_time-start_time:0.4f} seconds")
