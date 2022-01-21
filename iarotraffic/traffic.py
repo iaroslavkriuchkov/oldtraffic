@@ -119,6 +119,13 @@ def day_to_date(year: int, day: int) -> datetime.date:
     date = datetime.date(year, 1, 1) + datetime.timedelta(days=day-1)
     return date
 
+def previous_days(year: int, day: int, num_of_days: int):
+    prediction_date = day_to_date(year, day)
+    days_list = [None] * num_of_days
+    for i in range(num_of_days):
+        days_list[i] = [year-i-1, day+5-day_to_date(year-i-1, 21).isoweekday()]
+    return days_list
+
 
 """LOADING TRAFFIC DATA FROM LOCAL GZIP-FILE.
 IF UNSUCCESSFUL, LOADING DATA FROM THE SERVER AND SAVING IT LOCALLY AS GZIP-FILE"""

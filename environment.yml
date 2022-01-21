@@ -1,0 +1,5 @@
+name: dsfb2
+dependencies:
+ - python=3.8.*
+ - numpy=1.20.*
+ - pandas=1.2.4
